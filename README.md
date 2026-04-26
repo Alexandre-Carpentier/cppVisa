@@ -3,15 +3,14 @@
 ## Description
 
 A C++23 library that wraps the NI VISA API.
+The idea is to use NI VISA library easily without all the C boilerplate.
 Supports USBTMC, Ethernet (VXI-11/HiSLIP), Serial (RS-232), and GPIB.
 
 ## Features
 
 ### ✅ Architecture
-- **Factory Pattern**: Protocol creation based on configuration
-- **Static Polymorphism**: Uses `std::variant` for zero-cost abstraction
-- **Type-Safe**: Compile-time type verification
-- **Modern C++**: C++23 with designated initializers
+- A pointer to implementation hide details (cVisaImpl)for a clean header. 
+Refer to pimpl for documentation.
 
 ### ✅ Supported Protocols
 1. **USB** - Communication via USB-TMC
