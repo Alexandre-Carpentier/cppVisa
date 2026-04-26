@@ -30,7 +30,6 @@ build.ninja
 *.gch
 *.pch
 
-
 # Executables
 *.exe
 *.out
