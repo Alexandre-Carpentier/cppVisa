@@ -22,7 +22,7 @@ file(GLOB_RECURSE SOURCE_FILES "library_src/*.cpp" "library_src/*.h")
 file(GLOB_RECURSE EXEC_FILES "executable_src/*.cpp" "executable_src/*.h")
 
 # VISA library path
-set(VISA_LIB_PATH "${CMAKE_SOURCE_DIR}/cppVisa/NIVISA/Lib_x64/msc/visa64.lib")
+set(VISA_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/NIVISA/Lib_x64/msc/visa64.lib")
 
 add_library(cppVisa SHARED ${SOURCE_FILES})
 target_link_libraries(cppVisa PRIVATE ${VISA_LIB_PATH})
