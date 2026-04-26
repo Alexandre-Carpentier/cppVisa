@@ -1,4 +1,4 @@
-﻿# cVisa - Modern C++ Wrapper for NIVISA
+﻿# cppVisa - Modern C++ Wrapper for National Instrument VISA
 
 ## Description
 
