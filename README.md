@@ -2,61 +2,53 @@
 
 ## Description
 
-Une bibliothèque moderne C++23 qui encapsule l'API NIVISA avec un pattern Factory et du polymorphisme statique utilisant `std::variant` et `std::visit`.
+A C++23 library that wraps the NI VISA API.
+Supports USBTMC, Ethernet (VXI-11/HiSLIP), Serial (RS-232), and GPIB.
 
-## Caractéristiques
+## Features
 
 ### ✅ Architecture
-- **Factory Pattern** : Création automatique du bon protocole selon la configuration
-- **Polymorphisme Statique** : Utilisation de `std::variant` pour zero-cost abstraction
-- **Type-Safe** : Vérification des types à la compilation
-- **Modern C++** : C++23 avec designated initializers
+- **Factory Pattern**: Protocol creation based on configuration
+- **Static Polymorphism**: Uses `std::variant` for zero-cost abstraction
+- **Type-Safe**: Compile-time type verification
+- **Modern C++**: C++23 with designated initializers
 
-### ✅ Protocoles Supportés
+### ✅ Supported Protocols
 1. **USB** - Communication via USB-TMC
-2. **Ethernet (ETH)** - Communication TCP/IP avec VXI-11 ou HiSLIP
-3. **Serial (COM)** - Communication série RS-232
-4. **GPIB** - Communication IEEE-488
+2. **Ethernet (ETH)** - TCP/IP communication with VXI-11 or HiSLIP
+3. **Serial (COM)** - RS-232 serial communication
+4. **GPIB** - IEEE-488 communication
 
-### ✅ Fonctionnalités NIVISA Implémentées
+### NI VISA Specifics
 
-#### Pour tous les protocoles :
-- `viOpenDefaultRM()` - Ouverture du Resource Manager
-- `viOpen()` - Ouverture d'une session VISA
-- `viClose()` - Fermeture de session
-- `viRead()` - Lecture de données
-- `viWrite()` - Écriture de données
-- `viSetAttribute()` - Configuration d'attributs
-- `viStatusDesc()` - Description des erreurs
+#### USB Protocol:
+- Timeout configuration (`VI_ATTR_TMO_VALUE`)
 
-#### Protocole USB :
-- Configuration du timeout (`VI_ATTR_TMO_VALUE`)
+#### COM Protocol (Serial):
+- Baud rate configuration (`VI_ATTR_ASRL_BAUD`)
+- Data bits configuration (`VI_ATTR_ASRL_DATA_BITS`)
+- Stop bits configuration (`VI_ATTR_ASRL_STOP_BITS`)
+- Parity configuration (`VI_ATTR_ASRL_PARITY`)
 
-#### Protocole COM (Serial) :
-- Configuration du baudrate (`VI_ATTR_ASRL_BAUD`)
-- Configuration des bits de données (`VI_ATTR_ASRL_DATA_BITS`)
-- Configuration des bits de stop (`VI_ATTR_ASRL_STOP_BITS`)
-- Configuration de la parité (`VI_ATTR_ASRL_PARITY`)
+#### Ethernet Protocol:
+- Timeout configuration
+- Termination character configuration (`VI_ATTR_TERMCHAR`)
+- Enable termination character detection (`VI_ATTR_TERMCHAR_EN`)
 
-#### Protocole Ethernet :
-- Configuration du timeout
-- Configuration du caractère de terminaison (`VI_ATTR_TERMCHAR`)
-- Activation de la détection de caractère terminal (`VI_ATTR_TERMCHAR_EN`)
+#### GPIB Protocol:
+- Timeout configuration
+- `viClear()` - Bus clearing
 
-#### Protocole GPIB :
-- Configuration du timeout
-- `viClear()` - Nettoyage du bus
+## Usage
 
-## Utilisation
-
-### Exemple basique
+### Basic Example
 
 ```cpp
 #include "cVisa.h"
 
 int main()
 {
-    // Connexion USB
+    // USB Connection
     cVisa visa({
         .address = "USB0::0x1AB1::0x0588::DS1ZA170000000::INSTR",
         .timeout = 5000,
@@ -77,7 +69,7 @@ int main()
 }
 ```
 
-### Exemples par protocole
+### Protocol-specific Examples
 
 #### USB
 ```cpp
@@ -115,111 +107,60 @@ cVisa visaGpib({
 });
 ```
 
-### Customisation après construction
+### Post-construction Customization
 
 ```cpp
 cVisa visa({...});
 
-// Modifier le timeout après création
+// Change timeout after creation
 visa.setTimeout(10000);
 uint32_t currentTimeout = visa.getTimeout();
 
-// Modifier l'adresse
+// Change address
 visa.setAddress("TCPIP0::192.168.1.101::inst0::INSTR");
 std::string currentAddress = visa.getAddress();
 
-// Obtenir le type de protocole
+// Get protocol type
 PROTOCOL proto = visa.getProtocol();
 ```
 
-## API Publique
+## Public API
 
-### Constructeur
+### Constructor
 ```cpp
 cVisa(configVISA config);
 ```
 
-### Méthodes de communication
+### Communication Methods
 ```cpp
-bool connect();                          // Ouvrir la connexion
-bool disconnect();                       // Fermer la connexion
-bool write(const std::string& command);  // Envoyer une commande
-bool read(std::string& response);        // Lire une réponse
+bool connect();                          // Open connection
+bool disconnect();                       // Close connection
+bool write(const std::string& command);  // Send a command
+bool read(std::string& response);        // Read a response
 ```
 
-### Méthodes de configuration
+### Configuration Methods
 ```cpp
-void setTimeout(uint32_t timeout);       // Modifier le timeout (ms)
-void setAddress(const std::string& address); // Modifier l'adresse
-uint32_t getTimeout() const;             // Obtenir le timeout
-std::string getAddress() const;          // Obtenir l'adresse
-PROTOCOL getProtocol() const;            // Obtenir le protocole
+void setTimeout(uint32_t timeout);       // Change timeout (ms)
+void setAddress(const std::string& address); // Change address
+uint32_t getTimeout() const;             // Get timeout
+std::string getAddress() const;          // Get address
+PROTOCOL getProtocol() const;            // Get protocol
 ```
 
-## Gestion des erreurs
+## Error Handling
 
-La bibliothèque utilise la fonction `checkVisaStatus()` pour vérifier tous les retours de l'API VISA :
 
-```cpp
-inline bool checkVisaStatus(ViStatus status, const std::string& operation) {
-    if (status < VI_SUCCESS) {
-        char errMsg[256];
-        viStatusDesc(VI_NULL, status, errMsg);
-        std::cerr << "[VISA Error] " << operation << ": " << errMsg 
-                  << " (0x" << std::hex << status << std::dec << ")\n";
-        return false;
-    }
-    return true;
-}
-```
+Errors are automatically displayed with:
+- The name of the failed operation
+- A descriptive VISA error message
+- The error code in hexadecimal
 
-Les erreurs sont automatiquement affichées avec :
-- Le nom de l'opération qui a échoué
-- Le message d'erreur VISA descriptif
-- Le code d'erreur en hexadécimal
+## Dependencies
 
-## Architecture interne
-
-### Polymorphisme statique avec std::variant
-
-```cpp
-using ProtocolVariant = std::variant<UsbProtocol, ComProtocol, EthProtocol, GpibProtocol>;
-```
-
-### Visitors pour les opérations
-
-Chaque opération est implémentée via un visitor :
-- `ConnectVisitor` : Connexion
-- `DisconnectVisitor` : Déconnexion
-- `WriteVisitor` : Écriture
-- `ReadVisitor` : Lecture
-- `SetTimeoutVisitor` : Modification du timeout
-- `SetAddressVisitor` : Modification de l'adresse
-- `GetTimeoutVisitor` : Lecture du timeout
-- `GetAddressVisitor` : Lecture de l'adresse
-
-### Factory Pattern
-
-```cpp
-ProtocolVariant createProtocol(PROTOCOL protocol, const std::string& address, uint32_t timeout)
-```
-
-La fonction factory instancie automatiquement le bon protocole selon le paramètre `PROTOCOL`.
-
-## Avantages de cette approche
-
-1. **Performance** : Pas de virtual table, dispatch à la compilation (zero-cost abstraction)
-2. **Type-Safe** : Le compilateur vérifie tous les types
-3. **Extensible** : Facile d'ajouter de nouveaux protocoles
-4. **Maintenable** : Code clair et structuré
-5. **RAII** : Gestion automatique des ressources (sessions VISA)
-6. **Modern C++** : Utilise les features C++17/20/23
-
-## Dépendances
-
-- **NIVISA** : Bibliothèque NI-VISA (visa64.lib)
+- **NIVISA** : NI-VISA library (visa64.lib)
 - **C++ Standard** : C++23
-- **CMake** : Version minimale 3.8
+- **CMake** : Minimum version 3.8
 
 ## Build
 
@@ -228,24 +169,12 @@ cmake -B build -G Ninja
 cmake --build build
 ```
 
-## Notes techniques
-
-### Gestion des sessions VISA
-
-Chaque protocole maintient :
-- `m_defaultRM` : Session du Resource Manager
-- `m_session` : Session de l'instrument
-
-Les sessions sont automatiquement fermées dans les destructeurs (RAII pattern).
-
-### Thread Safety
-
-L'implémentation actuelle n'est **pas thread-safe**. Si vous devez utiliser la bibliothèque dans un contexte multi-thread, ajoutez des mutex appropriés.
+## Technical Notes
 
 ## License
 
 LGPL-2.1-or-later
 
-## Auteur
+## Author
 
 Alexandre CARPENTIER
